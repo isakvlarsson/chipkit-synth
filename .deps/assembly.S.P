@@ -1,0 +1,2 @@
+assembly.S.o: assembly.S
+assembly.S :
