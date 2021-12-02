@@ -81,35 +81,35 @@ void translate_message(unsigned char message) {
 // Handle interrupt and read UART input
 void reciever_isr(void) {
   // Should always be called when this function is, but put here as start
-  if ((IFS(0) & 0x8000000)) {
+  if ((IFS(1) & 0x2000000)) {
     // Read all bytes in buffer in loop?
     unsigned char input = (U1RXREG & 0xFF); // Read reciever register
     /*
      Save or return read input.
      */
-
+    
     translate_message(input);
 
-    IFSCLR(0) = 0x8000000; // Clear interrupt flag
+    IFSCLR(1) = 0x2000000; // Clear interrupt flag
   }
 }
 
 // Initialize UART configuration to handle input
 void init_pin(void) {
-  U1BRG = 159; // Setting the Baud rate (Assumed SYSCLK AT 80Mhz =>
+  U2BRG = 159; // Setting the Baud rate (Assumed SYSCLK AT 80Mhz =>
                // (80000000/31250/16 -1))
-  U1MODE = 0;  // RESET UART1
-  U1STA = 0;   // RESET UART Status
+  U2MODE = 0;  // RESET UART1
+  U2STA = 0;   // RESET UART Status
 
   // 8 bit data, no parity bit, 1 stop bit so U1MODE 2:0 = 000 (PDSEL&STSEL)
 
-  IFSCLR(0) = 0x8000000; // Clear interrupt flag for the U1 reciever
-  IECSET(0) = 0x8000000; // Enable recieve interrupts at IEC0 bit 27 (U1RXIE)
-  IPCCLR(6) = 0x1F;      // CLEAR interrupt priorities
-  IPCSET(6) = 0b1111;    // Set priority to 3 sub priority 3 (???)
-  U1STASET = 0x1000; // Set URXEN bit for reciever mode (12th bit of U1STASET)
-  U1MODE = 0x8000;   // Enable UART1
+  IFSCLR(1) = 0x2000000; // Clear interrupt flag for the U1 reciever
+  IECSET(1) = 0x2000000; // Enable recieve interrupts at IEC0 bit 27 (U1RXIE)
+  IPCCLR(8) = 0x1F;      // CLEAR interrupt priorities
+  IPCSET(8) = 0b1111;    // Set priority to 3 sub priority 3 (???)
+  U2STASET = 0x1000; // Set URXEN bit for reciever mode (12th bit of U1STASET)
+  U2MODE = 0x8000;   // Enable UART1
 
   // MAKE UR1SEL Bits 00 to generate interupt for each recieved character
-  U1STACLR = 0xC0;
+  U2STACLR = 0xC0;
 }
