@@ -5,31 +5,31 @@
 #include "global.h"
 
 int sample = 0;
-double frequency = 220.0;
-
 //int sine_Lookup[64] = {0x19,0x1b,0x1e,0x20,0x23,0x25,0x27,0x29, 0x2b,0x2c,0x2e,0x2f,0x30,0x31,0x32,0x32, 0x32,0x32, 0x32,0x31,0x30,0x2f,0x2e,0x2c, 0x2b,0x29,0x27,0x25,0x23,0x20,0x1e,0x1b, 0x19,0x17, 0x14,0x12,0xf, 0xd,0xb,0x9, 0x7,0x6,0x4,0x3,0x2,0x1,0x0,0x0, 0x0,0x0,0x0,0x1,0x2,0x3,0x4,0x6, 0x7,0x9,0xb,0xd,0xf,0x12,0x14,0x17};
 
 void gen_sine(void) {
 	sample++;
 	//double y = sin( (2.0*M_PI*frequency*sample) / (double)SAMPLE_RATE )/2 + 0.5;
 	//OC1RS = (int)round(y*255);
-	OC1RS = sine_sample[sample]; // divide by 2 for 50% max
-	
-	
-}
-
-void gen_two_sine(void) {
-	sample++;
-	//double y = sin( (2.0*M_PI*frequency*sample) / (double)SAMPLE_RATE )/2 + 0.5;
-	//OC1RS = (int)round(y*255);
-	int adjusted = sine_sample[sample] - 127;
-	int adjusted_2 = sine_sample[((sample*3)>>1)%256] - 127;
-	OC1RS = ((adjusted + adjusted_2)>>1) + 127; // divide by 2 for 50% max
+	OC1RS = get_wavetable_sample(sample, 0); // divide by 2 for 50% max
 	if (sample == 255){
 		sample = -1;
 	}
+	
 }
-
+//
+//void gen_two_sine(void) {
+//	sample++;
+//	//double y = sin( (2.0*M_PI*frequency*sample) / (double)SAMPLE_RATE )/2 + 0.5;
+//	//OC1RS = (int)round(y*255);
+//	int adjusted = sine_sample[sample] - 127;
+//	int adjusted_2 = sine_sample[((sample*3)>>1)%256] - 127;
+//	OC1RS = ((adjusted + adjusted_2)>>1) + 127; // divide by 2 for 50% max
+//	if (sample == 255){
+//		sample = -1;
+//	}
+//}
+//
 
 void gen_saw(void){
 
@@ -39,7 +39,7 @@ void gen_squarewave(void) {
 }
 // Example code for Timer2 ISR:
 void T2_IntHandler (void) {
-	gen_two_sine();
+	gen_sine();
 
 	// Insert user code here
 	IFSCLR(0) = 0x0100; // Clearing Timer2 interrupt flag
@@ -53,8 +53,8 @@ void user_isr(void) {
 void PWM_setup(void) {
 	// PWM setup
 	OC1CON = 0x0000; // Turn off the OC1 when performing the setup
-	OC1R = sine_sample[0]; // Initialize primary Compare register to first sample
-	OC1RS = sine_sample[0]; // Initialize secondary Compare register to first sample
+	OC1R = 0x00; // Initialize primary Compare register to first sample
+	OC1RS = 0x00; // Initialize secondary Compare register to first sample
 	OC1CON = 0x000e; // Configure for PWM mode without Fault pin enabled and TM3 as controlling timer
 	OC1CONSET = 0x8000; // Enable OC1
 

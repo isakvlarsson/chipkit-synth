@@ -28,8 +28,13 @@ struct Voice {
   unsigned char channel;
   unsigned char pitch;
   unsigned char velocity;
+  unsigned int wave_period;
+  int sample;
 };
 
+void set_voice_pitch(unsigned char voice_index, unsigned char pitch) {
+
+}
 struct Voice voices[16];
 unsigned int last_voice = 0;
 
