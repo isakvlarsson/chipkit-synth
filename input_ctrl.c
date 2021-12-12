@@ -9,34 +9,23 @@
  *
  */
 
-#include <math.h>
-
 #include <pic32mx.h> //Chipkit specific addressess and more
 #include <stdint.h>
-
+#include "global.h"
 // Status of input: 0 = listening for new message, 1 = listening for pitch, 2 =
 // listening for
 enum InputStatus {
   Rest,
-  PitchListening,
-  VelocityListening,
+  PitchOn,
+  VelocityOn,
+  PitchOff,
+  VelocityOff
 };
 
 enum InputStatus status = Rest;
 
-struct Voice {
-  unsigned char channel;
-  unsigned char pitch;
-  unsigned char velocity;
-  unsigned int wave_period;
-  int sample;
-};
-
-void set_voice_pitch(unsigned char voice_index, unsigned char pitch) {
-
-}
-struct Voice voices[16];
 unsigned int last_voice = 0;
+unsigned char voice_flags;
 
 // To ensure 80MHz peripheral bus clock
 // Credit to mipslabmain.c by Axel Isaksson & F Lundevall
@@ -54,67 +43,64 @@ void initialize_pbclock(void) {
 
 void translate_message(unsigned char message) {
   // Status Message MSB is set 0x80 <= message <= 0xFF
-
+	
   if (status == Rest) {
     if (message >= 0x80) {
       switch (message & 0xF0) {
         // Note Off
-      case 0x80:
-
+      case 0x80:	
+	status = PitchOff;
         break;
         // Note On
       case 0x90:
-        ++last_voice;
-        struct Voice new_voice;
-        new_voice.channel = (message & 0xF);
-        status = PitchListening;
-        voices[last_voice] = new_voice;
+       for (int i = 0; i < 8; i++){
+	       if(*voice_velocities[i] == 0){
+		       last_voice = i;
+       		       status = PitchOn; 	//Find a voice that's off
+		       break;
+	       }
+       }
         break;
       default:
         break;
       }
     }
-  } else if (status == PitchListening) {
-    voices[last_voice].pitch = (message & 0x7F);
-    status = VelocityListening;
-  } else if (status == VelocityListening) {
-    voices[last_voice].velocity = (message & 0x7F);
-    status = Rest;
-  }
-}
-
-// Handle interrupt and read UART input
-void reciever_isr(void) {
-  // Should always be called when this function is, but put here as start
-  if ((IFS(1) & 0x2000000)) {
-    // Read all bytes in buffer in loop?
-    unsigned char input = (U1RXREG & 0xFF); // Read reciever register
-    /*
-     Save or return read input.
-     */
-    
-    translate_message(input);
-
-    IFSCLR(1) = 0x2000000; // Clear interrupt flag
+  } else if (status == PitchOn) {
+	*voice_pitch[last_voice] = message; 	//set the pitch
+    	status = VelocityOn;
+  } else if (status == PitchOff) {
+    for (int i = 0; i < 8; i++){
+	    if (*voice_pitch[i] == message){
+		last_voice = i; 		//Find note to turn off
+	    }
+    }
+    status = VelocityOff;
+  } else if (status == VelocityOn){
+	  *voice_velocities[last_voice] = 255; //Replace 255 with message to use custom velocity
+	  status = Rest;
+  }else if (status == VelocityOff){
+	  *voice_velocities[last_voice] = 0; // Shut Note off
   }
 }
 
 // Initialize UART configuration to handle input
+// U2RX = PIN 39 on UNO SHIELD
 void init_pin(void) {
-  U2BRG = 159; // Setting the Baud rate (Assumed SYSCLK AT 80Mhz =>
+
+  ODCF = 0;
+  TRISFCLR = 0xFF;
+
+  U2BRG =159; // Setting the Baud rate (Assumed SYSCLK AT 80Mhz =>
                // (80000000/31250/16 -1))
-  U2MODE = 0;  // RESET UART1
+  U2MODE = 0;  // RESET UART
   U2STA = 0;   // RESET UART Status
+  // 8 bit data, no parity bit, 1 stop bit so U2MODE 2:0 = 000 (PDSEL&STSEL)
 
-  // 8 bit data, no parity bit, 1 stop bit so U1MODE 2:0 = 000 (PDSEL&STSEL)
+  U2MODESET = 0x8000;   // Enable UART2
 
-  IFSCLR(1) = 0x2000000; // Clear interrupt flag for the U1 reciever
-  IECSET(1) = 0x2000000; // Enable recieve interrupts at IEC0 bit 27 (U1RXIE)
-  IPCCLR(8) = 0x1F;      // CLEAR interrupt priorities
-  IPCSET(8) = 0b1111;    // Set priority to 3 sub priority 3 (???)
-  U2STASET = 0x1000; // Set URXEN bit for reciever mode (12th bit of U1STASET)
-  U2MODE = 0x8000;   // Enable UART1
-
-  // MAKE UR1SEL Bits 00 to generate interupt for each recieved character
-  U2STACLR = 0xC0;
+  U2STASET = 0x1400; // Set URXEN bit (UTXEN) for reciever mode (12th bit of U2STASET)
+    TRISE = 0;
+    PORTE = 0;
+    TRISE &= 0xFFFF; // AND with 1111111100000000 to set 8 LSB to 0
+    PORTE &= 0xFF00; // AND with 1111111100000000 to set 8 LSB to 0
 }
