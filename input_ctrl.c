@@ -43,18 +43,18 @@ void initialize_pbclock(void) {
 
 void translate_message(unsigned char message) {
   // Status Message MSB is set 0x80 <= message <= 0xFF
-	
   if (status == Rest) {
     if (message >= 0x80) {
       switch (message & 0xF0) {
         // Note Off
       case 0x80:	
-	status = PitchOff;
+      
+	    status = PitchOff;
         break;
         // Note On
       case 0x90:
        for (int i = 0; i < 8; i++){
-	       if(*voice_velocities[i] == 0){
+	       if(get_voice_velocities(i) == 0){
 		       last_voice = i;
        		       status = PitchOn; 	//Find a voice that's off
 		       break;
@@ -66,20 +66,21 @@ void translate_message(unsigned char message) {
       }
     }
   } else if (status == PitchOn) {
-	*voice_pitch[last_voice] = message; 	//set the pitch
+	  set_voice_pitch(last_voice, message); 	//set the pitch
     	status = VelocityOn;
   } else if (status == PitchOff) {
     for (int i = 0; i < 8; i++){
-	    if (*voice_pitch[i] == message){
+	    if (get_voice_pitch(i) == message){
 		last_voice = i; 		//Find note to turn off
 	    }
     }
     status = VelocityOff;
   } else if (status == VelocityOn){
-	  *voice_velocities[last_voice] = 255; //Replace 255 with message to use custom velocity
+	  set_voice_velocities(last_voice, 60); //Replace 255 with message to use custom velocity
 	  status = Rest;
   }else if (status == VelocityOff){
-	  *voice_velocities[last_voice] = 0; // Shut Note off
+	  set_voice_velocities(last_voice, 0); // Shut Note off
+    status = Rest;
   }
 }
 

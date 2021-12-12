@@ -1,6 +1,6 @@
 #include <math.h>
 #include <stdint.h>
-
+#include "global.h"
 const int SAMPLES_PER_PERIOD[] = {
     9785, 9236, 8717, 8228, 7766, 7330, 6919, 6531, 6164, 5818, 5492, 5183,
     4892, 4618, 4359, 4114, 3883, 3665, 3460, 3265, 3082, 2909, 2746, 2592,
@@ -21,6 +21,19 @@ int voice_pitch[] = {0,0,0,0,0,0,0,0};
 int voice_counters[] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 int voice_velocities[] = {0, 0, 0, 0, 0, 0, 0, 0};
+/// Setters and getters
+void set_voice_velocities(int i, int value){
+  voice_velocities[i] = value;
+}
+void set_voice_pitch(int i, int value){
+  voice_pitch[i] = value;
+}
+int get_voice_velocities(int i){
+  return voice_velocities[i];
+}
+int get_voice_pitch(int i){
+  return voice_pitch[i];
+}
 
 int next_saw_note(int voice) {
   int sample = voice_counters[voice];
@@ -72,9 +85,9 @@ int next_square_note(int voice) {
   int note;
 
   if (sample > half_period) {
-    note = amplitude;
-  } else {
     note = 0;
+  } else {
+    note = amplitude;
   }
 
   if (sample >= s_period) {

@@ -4,6 +4,7 @@
 #include <pic32mx.h>
 #include "global.h"
 
+// For midi errors
 int message = 0xFF;
 int stuff = 0;
 int sample = 0;
@@ -17,18 +18,29 @@ void gen_sine(void) {
 	
 }
 
-// Timer2 ISR:
+// Sound Generation
 void T2_IntHandler (void) {
-	//gen_sine();
-	
+	int output = 0;
 	for (int i = 0; i < 8; i++){
-		if(*voice_velocities[i] > 0){
+		if(get_voice_velocities(i) > 0){
 			// Replace saw with triangle or square at will
-			int note = next_saw_note(i); //SawTooth sample from voice i which is on
+			int note = next_square_note(i); //SawTooth sample from voice i which is on
+			//int note = next_saw_note(i);
+			//int note = next_triangle_note(i);
 			//TODO! Blend or output notes
+			//output += (note-127)/8;
+			output += note;
 		}
 	}
-
+	//output += 127;
+	// Clip sound, max is 8-bits (255)
+	if (output > 255) {
+		output = 255;
+	} 
+	//else if (output < 0) {
+	//	output = 0;
+	//}
+	PORTE = output;
 	IFSCLR(0) = 0x0100; // Clearing Timer2 interrupt flag
 }
 
@@ -85,6 +97,8 @@ void PWM_setup(void) {
 }
 
 int main() {
+	// init PORTE for sound output
+	TRISE &= 0xFF00;
 	initialize_pbclock();
 	init_pin();
 	PWM_setup();
