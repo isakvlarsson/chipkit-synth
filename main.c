@@ -54,17 +54,22 @@ void user_isr(void) {
 	}
 
 	if(IFS(1) & (1 << 9)){
-		if (buffer_size <= 99){
-		input_buffer[buffer_size] = U2RXREG & 0xFF;
-		buffer_size++;
-		}else if (input_buffer[0] == BUFFER_FREESPACE){
-			buffer_size = 0;
+		while((U2STA & 0x1)) {
+			
+			
+			if (buffer_size <= 99){
 			input_buffer[buffer_size] = U2RXREG & 0xFF;
 			buffer_size++;
-		}else{
-			IFSSET(1) = (1 << 8); //UART ERROR OTHERWISE
-			PORTESET = 0xFF;
-		}
+			}else if (input_buffer[0] == BUFFER_FREESPACE){
+				buffer_size = 0;
+				input_buffer[buffer_size] = U2RXREG & 0xFF;
+				buffer_size++;
+			}else{
+				IFSSET(1) = (1 << 8); //UART ERROR OTHERWISE
+				PORTESET = 0xFF;
+			}
+		} //read buffer
+		
 		IFSCLR(1) = (1 << 9);
 	}
 
@@ -132,8 +137,8 @@ int main() {
 			}
 			translate_message(message);
 		}
-		int message = U2RXREG & 0xFF;
-		translate_message(message);	
+		//int message = U2RXREG & 0xFF;
+		//translate_message(message);	
 	}
 	
 	return 0;
