@@ -3,9 +3,9 @@
  * This file is to handle the handling of MIDI-in
  * Using UART
  *
- * Written by M Blomqvist
+ * Written by Malte Blomqvist
  *
- * Modified 2021-11-22
+ * Modified 2021-12-13 by Isak Larsson
  *
  */
 
@@ -44,28 +44,33 @@ void initialize_pbclock(void) {
 void translate_message(unsigned char message) {
   // Status Message MSB is set 0x80 <= message <= 0xFF
   if (status == Rest) {
+
     if (message >= 0x80) {
+
       switch (message & 0xF0) {
         // Note Off
-      case 0x80:	
-      
-	    status = PitchOff;
-        break;
-        // Note On
-      case 0x90:
-       for (int i = 0; i < 8; i++){
-	       if(get_voice_velocities(i) == 0){
-		       last_voice = i;
-       		       status = PitchOn; 	//Find a voice that's off
-		       break;
-	       }
-       }
-        break;
-      default:
-        break;
+        case 0x80:	
+
+	        status = PitchOff;
+          break;
+
+          // Note On
+        case 0x90:
+         for (int i = 0; i < 8; i++){
+	         if(get_voice_velocities(i) == 0){
+		         last_voice = i;
+         		       status = PitchOn; 	//Find a voice that's off
+		         break;
+	         }
+         }
+          break;
+
+        default:
+          break;
       }
     }
   } else if (status == PitchOn) {
+
 	  set_voice_pitch(last_voice, message); 	//set the pitch
     	status = VelocityOn;
   } else if (status == PitchOff) {

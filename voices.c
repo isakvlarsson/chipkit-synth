@@ -1,3 +1,16 @@
+/* voices.c
+ *
+ * File for keeping track of the voices and their states.
+ * This is where sound is generated
+ * 
+ * Written by Malte Blomqvist
+ *
+ * Last updated 2021-12-13 by Isak Larsson
+ *
+ * For copyright and licensing, see file COPYING
+ */
+
+
 #include <math.h>
 #include <stdint.h>
 #include "global.h"
@@ -21,6 +34,7 @@ int voice_pitch[] = {0,0,0,0,0,0,0,0};
 int voice_counters[] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 int voice_velocities[] = {0, 0, 0, 0, 0, 0, 0, 0};
+
 /// Setters and getters
 void set_voice_velocities(int i, int value){
   voice_velocities[i] = value;
@@ -35,6 +49,7 @@ int get_voice_pitch(int i){
   return voice_pitch[i];
 }
 
+// Generates the next sample of a saw wave
 int next_saw_note(int voice) {
   int sample = voice_counters[voice];
   int pitch = voice_pitch[voice];
@@ -52,6 +67,7 @@ int next_saw_note(int voice) {
   return note;
 }
 
+// Generates the next sample of a triangle wave
 int next_triangle_note(int voice) {
   int sample = voice_counters[voice];
   int pitch = voice_pitch[voice];
@@ -75,6 +91,7 @@ int next_triangle_note(int voice) {
   return note;
 }
 
+// Generates the next sample of a square wave
 int next_square_note(int voice) {
   int sample = voice_counters[voice];
   int pitch = voice_pitch[voice];
