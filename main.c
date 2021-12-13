@@ -4,10 +4,12 @@
 #include <pic32mx.h>
 #include "global.h"
 
-// For midi errors
-int message = 0xFF;
-int stuff = 0;
 int sample = 0;
+
+unsigned int input_buffer[100];  //Input buffer
+unsigned int buffer_size = 0; //Buffer is filled to which point?
+unsigned int BUFFER_FREESPACE = 0xFFFF; //impossible MIDI value used to 
+unsigned int read_pointer = 0; //read pointer to ring buffer
 
 void gen_sine(void) {
 	sample++;
@@ -49,6 +51,18 @@ void user_isr(void) {
 
 	if (IFS(0) & 0x0100){
 	T2_IntHandler();
+	}
+
+	if(IFS(1) & (1 << 9)){
+		if (buffer_size <= 99){
+		input_buffer[buffer_size] = U2RXREG & 0xFF;
+		buffer_size++;
+		}else if (input_buffer[0] == BUFFER_FREESPACE){
+			buffer_size = 0;
+			input_buffer[buffer_size] = U2RXREG & 0xFF;
+			buffer_size++;
+		}
+		IFSCLR(1) = (1 << 9);
 	}
 
 	//IF UART ERROR DO LIGHTS
@@ -99,14 +113,23 @@ void PWM_setup(void) {
 int main() {
 	// init PORTE for sound output
 	TRISE &= 0xFF00;
+
 	initialize_pbclock();
 	init_pin();
 	PWM_setup();
 	while (1)
 	{
 		/* code */
-		while(!(U2STA & 0x1)); //wait for read buffer to have a value
-		message = U2RXREG & 0xFF;
+		if (read_pointer < buffer_size){
+			int message = input_buffer[read_pointer] & 0xFF;
+			input_buffer[read_pointer] = BUFFER_FREESPACE;
+			read_pointer++;
+			if(read_pointer > 99){
+				read_pointer = 0;
+			}
+			translate_message(message);
+		}
+		int message = U2RXREG & 0xFF;
 		translate_message(message);	
 	}
 	

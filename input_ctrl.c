@@ -97,6 +97,11 @@ void init_pin(void) {
   U2STA = 0;   // RESET UART Status
   // 8 bit data, no parity bit, 1 stop bit so U2MODE 2:0 = 000 (PDSEL&STSEL)
 
+  IECSET(1) = (3 << 8); // Enable recieve interrupts at IEC1 bit 8 & 9 (U2RXIE, U2EIE)
+  IPCSET(8) = 0x1E; 	// SET interrupt priorities - 3 sub 6
+  IFSCLR(1) = (3 << 8); // Clear interrupt flags for the U2 reciever (U2RXIF & U2EIF)
+
+
   U2MODESET = 0x8000;   // Enable UART2
 
   U2STASET = 0x1400; // Set URXEN bit (UTXEN) for reciever mode (12th bit of U2STASET)
