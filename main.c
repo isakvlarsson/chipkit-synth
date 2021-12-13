@@ -61,6 +61,9 @@ void user_isr(void) {
 			buffer_size = 0;
 			input_buffer[buffer_size] = U2RXREG & 0xFF;
 			buffer_size++;
+		}else{
+			IFSSET(1) = (1 << 8); //UART ERROR OTHERWISE
+			PORTESET = 0xFF;
 		}
 		IFSCLR(1) = (1 << 9);
 	}
