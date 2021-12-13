@@ -29,15 +29,17 @@ void T2_IntHandler (void) {
 			//int note = next_triangle_note(i);
 			//TODO! Blend or output notes
 			//output += (note-127)/8;
-			output += note;
+			output |= note;
 		}
 	}
 	//output += 127;
 	// Clip sound, max is 8-bits (255)
 	if (output > 255) {
 		output = 255;
-	} 
-	//else if (output < 0) {
+	} if (output < 0 ) {
+		output = 0;
+	}
+	//else if< (output < 0) {
 	//	output = 0;
 	//}
 	PORTE = output;
@@ -51,12 +53,12 @@ void user_isr(void) {
 	T2_IntHandler();
 	}
 
-	//IF UART ERROR DO LIGHTS
-	if(IFS(1) & (1 << 8)){
-		IFSCLR(1) = (1 << 8);
-		PORTESET = 0xFF;
-	}
-
+	////IF UART ERROR DO LIGHTS
+	//if(IFS(1) & (1 << 8)){
+	//	IFSCLR(1) = (1 << 8);
+	//	PORTESET = 0xFF;
+	//}
+//
 	if(U2STA & 2){
 		U2STACLR = 2;
 	}

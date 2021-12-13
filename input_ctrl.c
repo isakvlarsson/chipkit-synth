@@ -76,7 +76,7 @@ void translate_message(unsigned char message) {
     }
     status = VelocityOff;
   } else if (status == VelocityOn){
-	  set_voice_velocities(last_voice, 60); //Replace 255 with message to use custom velocity
+	  set_voice_velocities(last_voice, 30); //Replace 255 with message to use custom velocity
 	  status = Rest;
   }else if (status == VelocityOff){
 	  set_voice_velocities(last_voice, 0); // Shut Note off

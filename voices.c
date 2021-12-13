@@ -79,7 +79,7 @@ int next_square_note(int voice) {
   int sample = voice_counters[voice];
   int pitch = voice_pitch[voice];
   int s_period = SAMPLES_PER_PERIOD[pitch];
-  int half_period = s_period >> 1;
+  int half_period = s_period >> 4; // Higher divisor seems to increase tone clarity
   int amplitude = voice_velocities[voice];
 
   int note;
