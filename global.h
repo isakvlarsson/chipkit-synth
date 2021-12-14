@@ -30,6 +30,7 @@ int next_square_note(int voice);
 //message parsing
 void translate_message(unsigned char message);
 
+void setVolume(float v);
 
 void init_pin(void);
 

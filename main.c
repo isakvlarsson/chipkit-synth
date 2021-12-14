@@ -14,7 +14,7 @@
 
 // For midi errors
 int message = 0xFF;
-
+float volume = 1.0;
 // Sound Generation
 void T2_IntHandler (void) {
 	int output = 0;
@@ -36,8 +36,13 @@ void T2_IntHandler (void) {
 		output = 0;
 	}
 
-	PORTE = output;
+	PORTE = (int)(output/volume);
 	IFSCLR(0) = 0x0100; // Clearing Timer2 interrupt flag
+}
+
+void setVolume(float v){
+	volume = v;
+	return;
 }
 
 /* Interrupt Service Routine */

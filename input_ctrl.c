@@ -14,7 +14,7 @@
 #include <stdint.h>
 // Status of input: 0 = listening for new message, 1 = listening for pitch, 2 =
 // listening for
-enum InputStatus { Rest, PitchOn, VelocityOn, PitchOff, VelocityOff };
+enum InputStatus { Rest, PitchOn, VelocityOn, PitchOff, VelocityOff, CC_wait, CC_off, VolumeSet };
 
 enum InputStatus status = Rest;
 
@@ -60,7 +60,9 @@ void translate_message(unsigned char message) {
           }
         }
         break;
-
+      case 0xB0:
+	status = CC_wait;
+        break;
       default:
 	last_statusMessage = 0xFF;
         break;
@@ -112,6 +114,17 @@ void translate_message(unsigned char message) {
   } else if (status == VelocityOff) {
     set_voice_velocities(last_voice, 0); // Shut Note off
     status = Rest;
+  }else if (status == CC_wait){
+	  if (message == 7){
+		  status = VolumeSet;
+	  }else{
+		  status = CC_off;
+	  }
+  }else if (status == VolumeSet){
+	setVolume((float)message / 127.0);
+	status = Rest;
+  }else if (status == CC_off){
+	  status = Rest;
   }
 }
 
