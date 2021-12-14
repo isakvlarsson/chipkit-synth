@@ -19,7 +19,7 @@ enum InputStatus { Rest, PitchOn, VelocityOn, PitchOff, VelocityOff };
 enum InputStatus status = Rest;
 
 unsigned int last_voice = 0;
-unsigned int last_statusMessage;
+unsigned int last_statusMessage = 0xFF;
 unsigned char voice_flags;
 
 // To ensure 80MHz peripheral bus clock
