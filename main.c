@@ -25,7 +25,7 @@ void T2_IntHandler (void) {
 			//int note = next_saw_note(i);
 			//int note = next_triangle_note(i);
 
-			output |= note;
+			output += note;
 		}
 	}
 	
