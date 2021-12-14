@@ -13,7 +13,7 @@ void enable_interrupt(void);
 void receiver_isr(void);
 
 // Global variables
-#define SAMPLE_RATE 80000 // (80_000_000/10_000)
+#define SAMPLE_RATE 20000 // (80_000_000/10_000)
 #define TIME_PER_SAMPLE 1/SAMPLE_RATE
 
 // For voices.c tracking voices and their velocities 

@@ -28,7 +28,7 @@ void T2_IntHandler (void) {
 			output += note;
 		}
 	}
-	
+	//output = (int)(output*volume);
 	// Clip sound, max is 8-bits (255)
 	if (output > 255) {
 		output = 255;
@@ -36,7 +36,7 @@ void T2_IntHandler (void) {
 		output = 0;
 	}
 
-	PORTE = (int)(output/volume);
+	PORTE = output;
 	IFSCLR(0) = 0x0100; // Clearing Timer2 interrupt flag
 }
 
@@ -65,9 +65,10 @@ void user_isr(void) {
 
 void timer2_setup(void) {
 	// Timer 2 setup, controlls sample-rate
-	PR2 = 80000000/SAMPLE_RATE; // Set period 
+	PR2 = 80000000/(SAMPLE_RATE*2); // Set period 
 	IFSCLR(0) = 0x00000100; // Clear the T2 interrupt flag
 	IECSET(0) = 0x00000100; // Enable T2 interrupt
+	T2CONSET = 0x10;
 	IPCSET(2) = 0x0000001C; // Set T2 interrupt priority to 7
 	T2CONSET = 0x8000; // Enable Timer2
 
