@@ -62,6 +62,7 @@ void translate_message(unsigned char message) {
         break;
 
       default:
+	last_statusMessage = 0xFF;
         break;
       }
       /// Check if data byte, do last message.
