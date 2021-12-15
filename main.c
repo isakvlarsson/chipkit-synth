@@ -1,23 +1,20 @@
-#include <stdint.h>  /* Declarations of uint_32 and the like */
+/* main.c
+ *
+ * Project main file
+ *
+ * Written by Malte Blomqvist and Isak Larsson
+ *
+ * Modified 2021-12-13 by Isak Larsson
+ *
+ */
 
-#include <math.h>
+#include <stdint.h>  /* Declarations of uint_32 and the like */
 #include <pic32mx.h>
 #include "global.h"
 
 // For midi errors
 int message = 0xFF;
-int stuff = 0;
-int sample = 0;
-
-void gen_sine(void) {
-	sample++;
-	OC1RS = get_wavetable_sample(sample, 0); // divide by 2 for 50% max
-	if (sample == 255){
-		sample = -1;
-	}
-	
-}
-
+float volume = 1.0;
 // Sound Generation
 void T2_IntHandler (void) {
 	int output = 0;
@@ -27,23 +24,25 @@ void T2_IntHandler (void) {
 			int note = next_square_note(i); //SawTooth sample from voice i which is on
 			//int note = next_saw_note(i);
 			//int note = next_triangle_note(i);
-			//TODO! Blend or output notes
-			//output += (note-127)/8;
-			output |= note;
+
+			output += note;
 		}
 	}
-	//output += 127;
+	//output = (int)(output*volume);
 	// Clip sound, max is 8-bits (255)
 	if (output > 255) {
 		output = 255;
-	} if (output < 0 ) {
+	} else if (output < 0 ) {
 		output = 0;
 	}
-	//else if< (output < 0) {
-	//	output = 0;
-	//}
+
 	PORTE = output;
 	IFSCLR(0) = 0x0100; // Clearing Timer2 interrupt flag
+}
+
+void setVolume(float v){
+	volume = v;
+	return;
 }
 
 /* Interrupt Service Routine */
@@ -53,48 +52,28 @@ void user_isr(void) {
 	T2_IntHandler();
 	}
 
-	////IF UART ERROR DO LIGHTS
-	//if(IFS(1) & (1 << 8)){
-	//	IFSCLR(1) = (1 << 8);
-	//	PORTESET = 0xFF;
-	//}
-//
+	//IF UART ERROR DO LIGHTS
+	if(IFS(1) & (1 << 8)){
+		IFSCLR(1) = (1 << 8);
+		PORTESET = 0xFF;
+	}
+
 	if(U2STA & 2){
 		U2STACLR = 2;
 	}
 }
 
-void PWM_setup(void) {
-	// PWM setup
-	OC1CON = 0x0000; // Turn off the OC1 when performing the setup
-	OC1R = 0x00; // Initialize primary Compare register to first sample
-	OC1RS = 0x00; // Initialize secondary Compare register to first sample
-	OC1CON = 0x000e; // Configure for PWM mode without Fault pin enabled and TM3 as controlling timer
-	OC1CONSET = 0x8000; // Enable OC1
-
-	// Timer 3 setup, controls PWM resolution
-	// 312 500
-	T3CON = 0x0;
-  	TMR3 = 0x0;
-	PR3 = 255; // Period, determies duty-cycle resolution
-	//T3CONSET = 0x70;
-	T3CONSET = 0x8000;
-
+void timer2_setup(void) {
 	// Timer 2 setup, controlls sample-rate
-	PR2 = 80000000/SAMPLE_RATE; // Set period 
-	//T2CON = 0x70;
+	PR2 = 80000000/(SAMPLE_RATE*2); // Set period 
 	IFSCLR(0) = 0x00000100; // Clear the T2 interrupt flag
 	IECSET(0) = 0x00000100; // Enable T2 interrupt
+	T2CONSET = 0x10;
 	IPCSET(2) = 0x0000001C; // Set T2 interrupt priority to 7
-	//T2CONSET = 0x70;   // Set scalar to 1:256
 	T2CONSET = 0x8000; // Enable Timer2
-	
-
-	
 
 	// Interrupt init
 	enable_interrupt();
-
 
 }
 
@@ -103,7 +82,7 @@ int main() {
 	TRISE &= 0xFF00;
 	initialize_pbclock();
 	init_pin();
-	PWM_setup();
+	timer2_setup();
 	while (1)
 	{
 		/* code */

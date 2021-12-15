@@ -1,3 +1,8 @@
+
+  # vectors.S
+  # This file written 2015 by Axel Isaksson
+  # Modified 2015 by F Lundevall
+  # For copyright and licensing, see file COPYING
 .macro movi reg, val
 	lui \reg, %hi(\val)
 	ori \reg, \reg, %lo(\val)
